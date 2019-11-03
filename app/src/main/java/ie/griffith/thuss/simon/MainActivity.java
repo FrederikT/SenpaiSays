@@ -30,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private static ListView list;
     private static Context mContext;
     private static EditText playerName;
+    private static ScoreManager manager;
+
 
 
     @Override
@@ -42,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
         playerName = findViewById(R.id.playerName);
         mContext = getApplicationContext();
         highscore = new ArrayList<>();
+        manager = new ScoreManager(getApplicationContext());
+        showHighscore();
     }
 
 
@@ -60,7 +64,13 @@ public class MainActivity extends AppCompatActivity {
         if(name.trim().equals("")){
             name = "Player 1";
         }
-        highscore.add(new Highscore(name, score));
+        manager.saveNewScore(name, score);
+        showHighscore();
+
+    }
+
+    private static void showHighscore() {
+        highscore = manager.getTopTen(mContext);
         ArrayAdapter<Highscore> arrayAdapter = new ArrayAdapter<>(
                 mContext,
                 android.R.layout.simple_list_item_1,
