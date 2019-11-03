@@ -2,32 +2,32 @@ package ie.griffith.thuss.simon;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Point;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
+import android.widget.TabHost;
 import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
 public class MainActivity extends AppCompatActivity {
+    public static int deviceHeight;
+    public static int deviceWidth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        deviceWidth= size.x;
+        deviceHeight = size.y;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent e) {
-        // MotionEvent reports input details from the touch screen
-        // and other input controls. In this case, you are only
-        // interested in events where the touch position changed.
 
-        float x = e.getX();
-        float y = e.getY();
-
-        Toast t = Toast.makeText(getApplicationContext(), "coord:"+x+"; "+y, Toast.LENGTH_LONG);
-        t.show();
-
-        return true;
-    }
 }

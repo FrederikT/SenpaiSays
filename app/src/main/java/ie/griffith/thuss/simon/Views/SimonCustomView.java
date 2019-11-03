@@ -7,9 +7,11 @@ import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 import ie.griffith.thuss.simon.R;
 import androidx.annotation.Nullable;
 import java.util.ArrayList;
@@ -17,10 +19,14 @@ import java.util.List;
 
 public class SimonCustomView extends View {
 
-    private static final int SQUARE_SIZE = 600;
-    private static final int[] TOP_LEFT = {100,120};
+    private static Context mContext;
+    private final DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
+    private final double width = displayMetrics.widthPixels;
+    // Everything matches perfectly the pixel 3 XL - therefore
+    private final int SQUARE_SIZE = (int)(600*(width/1440));
+    private final int[] TOP_LEFT = {(int)(100*(width/1440)),(int)(120*(width/1440))};
     private static  final int SPEED = 800;
-    private Context mContext;
+
 
     List<Integer> list;
     private Rect yellowRectSquare;
@@ -74,10 +80,12 @@ public class SimonCustomView extends View {
         bluePaintSquare.setColor(getResources().getColor(R.color.blue));
         greenPaintSquare.setColor(getResources().getColor(R.color.green));
 
+
     }
 
     @Override
     protected void onDraw(Canvas canvas){
+
         yellowRectSquare.top = TOP_LEFT[0];
         yellowRectSquare.left = TOP_LEFT[1];
         yellowRectSquare.bottom = yellowRectSquare.top + SQUARE_SIZE;
@@ -97,13 +105,13 @@ public class SimonCustomView extends View {
         greenRectSquare.left = TOP_LEFT[1]+ SQUARE_SIZE;
         greenRectSquare.bottom = greenRectSquare.top + SQUARE_SIZE;
         greenRectSquare.right = greenRectSquare.left + SQUARE_SIZE;
-
-
+        
 
         canvas.drawRect(yellowRectSquare,yellowPaintSquare);
         canvas.drawRect(pinkRectSquare,pinkPaintSquare);
         canvas.drawRect(blueRectSquare,bluePaintSquare);
         canvas.drawRect(greenRectSquare,greenPaintSquare);
+
 
     }
 
