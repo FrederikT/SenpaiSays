@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
+
+import ie.griffith.thuss.simon.MainActivity;
 import ie.griffith.thuss.simon.R;
 import androidx.annotation.Nullable;
 import java.util.ArrayList;
@@ -88,21 +90,6 @@ public class SimonCustomView extends View {
         pinkPaintSquare.setColor(getResources().getColor(R.color.pink));
         bluePaintSquare.setColor(getResources().getColor(R.color.blue));
         greenPaintSquare.setColor(getResources().getColor(R.color.green));
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setTitle("Sensei Says");
-        builder.setPositiveButton("Start game",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface arg0, int arg1) {
-                        //Start over
-                        playSequence();
-                    }
-                });
-
-
-        AlertDialog myDialog = builder.create();
-        myDialog.show();
     }
 
     @Override
@@ -182,6 +169,7 @@ public class SimonCustomView extends View {
             if(clickingCounter == sequenceList.size()){
                 // sequence has been completed
                 scoreCounter++;
+                MainActivity.setRound(scoreCounter);
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -211,29 +199,25 @@ public class SimonCustomView extends View {
         });
         p.start();
         sequenceList.clear();
-
+        MainActivity.setHighscore(scoreCounter);
         //show score & Game over
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle("GAME OVER \n Your Score: "+scoreCounter);
-        builder.setPositiveButton("Yes",
+        builder.setPositiveButton("Okay",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
-                        //Start over
-                        playSequence();
+
                     }
                 });
 
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //somehow shutdown
-            }
-        });
+
         AlertDialog myDialog = builder.create();
         myDialog.show();
         scoreCounter=0;
     }
+
+
 
 
     public void playSequence(){

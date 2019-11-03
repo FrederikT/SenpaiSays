@@ -2,32 +2,69 @@ package ie.griffith.thuss.simon;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TabHost;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import ie.griffith.thuss.simon.Views.SimonCustomView;
+
 public class MainActivity extends AppCompatActivity {
-    public static int deviceHeight;
-    public static int deviceWidth;
+    SimonCustomView simon;
+    private static TextView roundCounter;
+    private static List<Highscore> highscore;
+    private static ListView list;
+    private static Context mContext;
+    private static EditText playerName;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        deviceWidth= size.x;
-        deviceHeight = size.y;
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        simon = findViewById(R.id.custom);
+        roundCounter = findViewById(R.id.roundNumber);
+        list = findViewById(R.id.list);
+        playerName = findViewById(R.id.playerName);
+        mContext = getApplicationContext();
+        highscore = new ArrayList<>();
     }
 
 
+    public void startGame(View view) {
+        simon.playSequence();
+    }
+
+    public static void setRound(int number){
+        roundCounter.setText(""+number);
+    }
+
+    public static void setHighscore(int score){
+        Toast t = Toast.makeText(mContext, ""+score, Toast.LENGTH_SHORT);
+        t.show();
+        String name = playerName.getText().toString();
+        if(name.trim().equals("")){
+            name = "Player 1";
+        }
+        highscore.add(new Highscore(name, score));
+        ArrayAdapter<Highscore> arrayAdapter = new ArrayAdapter<>(
+                mContext,
+                android.R.layout.simple_list_item_1,
+                highscore);
+        list.setAdapter(arrayAdapter);
+    }
 }

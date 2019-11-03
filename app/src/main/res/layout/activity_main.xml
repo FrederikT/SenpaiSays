@@ -8,11 +8,58 @@
     tools:context=".MainActivity">
 
 
+    <Switch
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play Against Simon"
+        />
+
+
     <ie.griffith.thuss.simon.Views.SimonCustomView
+        android:id="@+id/custom"
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="@color/colorPrimaryDark">
+        android:background="@color/colorPrimaryDark"
+        android:layout_below="@+id/switch1"
+        >
 
     </ie.griffith.thuss.simon.Views.SimonCustomView>
+
+
+    <EditText
+        android:id="@+id/playerName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/custom"
+        android:ems="10"
+        android:hint="Player name"
+        android:inputType="textPersonName" />
+
+    <TextView
+        android:id="@+id/roundNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:layout_below="@+id/custom"
+        android:layout_toEndOf="@+id/playerName"
+        android:layout_alignBaseline="@+id/playerName"
+        />
+
+
+    <Button
+        android:id="@+id/start_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/playerName"
+        android:onClick="startGame"
+        android:text="Start Game" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/start_btn"
+        />
 
 </android.widget.RelativeLayout>
