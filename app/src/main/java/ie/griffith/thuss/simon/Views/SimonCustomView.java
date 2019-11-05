@@ -24,6 +24,7 @@ import java.util.Random;
 
 public class SimonCustomView extends View {
 
+
     private static Context mContext;
     private final DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
     private final double width = displayMetrics.widthPixels;
@@ -31,14 +32,17 @@ public class SimonCustomView extends View {
     // For responsive design the sizes will be calculated depending on the screen size of the pixel 3 XL and the screensize of the device that is used
     private final int SQUARE_SIZE = (int)(600*(width/1440));
     private final int[] TOP_LEFT = {(int)(100*(width/1440)),(int)(120*(width/1440))};
-    private static  final int DELAY_SPEED = 800;
-    private static  final int SPEED = (int)((double)DELAY_SPEED*0.9);
+    private static final int DELAY_SPEED = 800;
+    private static final int SPEED = (int)((double)DELAY_SPEED*0.9);
+    private static final int ROUND_DELAY = 1000;
 
-    private List<Integer> sequenceList = new ArrayList<Integer>();
+    private List<Integer> sequenceList = new ArrayList<>();
     private int sequenceCounter = 0;
     private int clickingCounter = 0;
     private int scoreCounter = 0;
     private boolean isPlaying;
+    private boolean isTwoPlayer;
+    private boolean isAppending=false;
     private Random r = new Random();
     final Handler handler = new Handler();
     private Rect yellowRectSquare;
@@ -162,31 +166,48 @@ public class SimonCustomView extends View {
         return true;
     }
 
-    private void evaluateClick(int squarenumber){
+    private void evaluateClick(final int squarenumber){
         blink(squarenumber);
-        if (squarenumber == sequenceList.get(clickingCounter)) {
-            // correct square has been pressed
-            clickingCounter++;
-            if (clickingCounter == sequenceList.size()) {
-                // sequence has been completed
-                scoreCounter++;
-                MainActivity.setRound(scoreCounter);
-                sequenceCounter = 0;
-                clickingCounter = 0;
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        playSequence();
-
+        if(isTwoPlayer && isAppending) {
+            sequenceCounter = 0;
+            clickingCounter = 0;
+            isAppending = false;
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    sequenceList.add(squarenumber);
+                    playSequence();
+                }
+            }, ROUND_DELAY);
+        }else{
+            if (squarenumber == sequenceList.get(clickingCounter)) {
+                // correct square has been pressed
+                clickingCounter++;
+                if (clickingCounter == sequenceList.size()) {
+                    // sequence has been completed
+                    scoreCounter++;
+                    MainActivity.setRound(scoreCounter);
+                    //only in single player - next one is appending
+                    if (isTwoPlayer) {
+                        isAppending = true;
+                    } else {
+                        sequenceCounter = 0;
+                        clickingCounter = 0;
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sequenceList.add(r.nextInt(4)+1);
+                                playSequence();
+                            }
+                        }, ROUND_DELAY);
                     }
-                }, 1000);
+                }
+            } else {
+                //wrong square has been pressed
+                gameOver();
+
             }
-        } else {
-            //wrong square has been pressed
-            gameOver();
-
         }
-
     }
 
     private void gameOver(){
@@ -201,7 +222,15 @@ public class SimonCustomView extends View {
         });
         p.start();
         sequenceList.clear();
-        MainActivity.setHighscore(scoreCounter);
+        /*
+         two player mode has no high score, even though the overall pressed fields is the same,
+         the played rounds are only half as in Single player mode.
+         furthermore it supports cheating (achieving a very good High Score by pressing only one field over and over again
+         */
+
+        if(!isTwoPlayer) {
+            MainActivity.setHighscore(scoreCounter);
+        }
         //show score & Game over
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle("GAME OVER \n Your Score: "+scoreCounter);
@@ -219,8 +248,10 @@ public class SimonCustomView extends View {
         scoreCounter=0;
     }
 
-    public void playGame(){
+    public void playGame(boolean isTwoPlayerMode){
         if(!isPlaying){
+            isTwoPlayer=isTwoPlayerMode;
+            sequenceList.add(r.nextInt(4)+1);
             playSequence();
         }
     }
@@ -229,7 +260,6 @@ public class SimonCustomView extends View {
         isPlaying = true;
         sequenceCounter = 0;
         clickingCounter = 0;
-        sequenceList.add(r.nextInt(4)+1);
         for(int index=0;  index< sequenceList.size(); index++){
             play(index);
 
@@ -277,10 +307,9 @@ public class SimonCustomView extends View {
         handler.postDelayed(r, (DELAY_SPEED) * playIndex);
     }
 
-
+    //redundant code within cases could be put in extra method e.g. using Paint and Color Arrays - readability would get worse.
+    // Creating new class for this with Pain, two colors and creating a array of these would also be possible, but to much for this assignment
     public void blink(int squareNumber){
-        Toast t = Toast.makeText(mContext, clickingCounter+"-"+squareNumber, Toast.LENGTH_SHORT);
-        t.show();
         switch (squareNumber){
             case 1:
                 yellowPaintSquare.setColor(getResources().getColor(R.color.yellowBright));

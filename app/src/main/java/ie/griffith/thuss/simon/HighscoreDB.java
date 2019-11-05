@@ -5,16 +5,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class HighscoreDB extends SQLiteOpenHelper {
-    SQLiteDatabase db;
-    Context context;
+    private SQLiteDatabase db;
+    private Context context;
 
-    public HighscoreDB(Context context){
+    HighscoreDB(Context context){
         super(context, "highscore.db", null,1);
         this.context = context;
         this.db = getWritableDatabase();
@@ -41,7 +39,8 @@ public class HighscoreDB extends SQLiteOpenHelper {
     }
 
 
-    public void addScore(Highscore newScore){
+
+    void addScore(Highscore newScore){
         try {
             String sql = "Insert into score (player_name,score) Values('"+newScore.getPlayername()+"', "+newScore.getScore()+")";
             db.execSQL(sql);
@@ -54,7 +53,7 @@ public class HighscoreDB extends SQLiteOpenHelper {
 
 
 
-    public List<Highscore> getHighscore(){
+    List<Highscore> getHighscore(){
         List<Highscore> highscore = new ArrayList<>();
         try{
             Cursor cursor = db.rawQuery("Select * from score Order by score desc", null);
@@ -73,7 +72,8 @@ public class HighscoreDB extends SQLiteOpenHelper {
 
         return highscore;
     }
-    public List<Highscore> getTopTen(){
+
+    List<Highscore> getTopTen(){
         List<Highscore> highscore = new ArrayList<>();
         try{
             Cursor cursor = db.rawQuery("Select * from score Order by score desc Limit 10", null);
@@ -93,7 +93,7 @@ public class HighscoreDB extends SQLiteOpenHelper {
         return highscore;
     }
 
-    public String getLastPlayerName(){
+    String getLastPlayerName(){
         String playerName = "";
         try{
             Cursor cursor = db.rawQuery("Select player_name from score Where player_name != 'Player 1'" +

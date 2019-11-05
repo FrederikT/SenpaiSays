@@ -2,6 +2,7 @@ package ie.griffith.thuss.simon;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private static Context mContext;
     private static EditText playerName;
     private static ScoreManager manager;
+    private static Switch twoPlayer;
 
 
 
@@ -47,22 +50,19 @@ public class MainActivity extends AppCompatActivity {
         manager = new ScoreManager(getApplicationContext());
         showHighscore();
         playerName.setText(manager.getPlayername());
-        Toast t = Toast.makeText(getApplicationContext(),manager.getPlayername(),Toast.LENGTH_SHORT);
-        t.show();
+        twoPlayer=findViewById(R.id.switch1);
     }
 
 
     public void startGame(View view) {
-        simon.playGame();
+        simon.playGame(twoPlayer.isChecked());
     }
 
     public static void setRound(int number){
-        roundCounter.setText(""+number);
+        roundCounter.setText(String.valueOf(number));
     }
 
     public static void setHighscore(int score){
-        Toast t = Toast.makeText(mContext, ""+score, Toast.LENGTH_SHORT);
-        t.show();
         String name = playerName.getText().toString();
         if(name.trim().equals("")){
             name = "Player 1";
