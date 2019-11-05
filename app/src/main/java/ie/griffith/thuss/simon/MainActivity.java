@@ -46,11 +46,14 @@ public class MainActivity extends AppCompatActivity {
         highscore = new ArrayList<>();
         manager = new ScoreManager(getApplicationContext());
         showHighscore();
+        playerName.setText(manager.getPlayername());
+        Toast t = Toast.makeText(getApplicationContext(),manager.getPlayername(),Toast.LENGTH_SHORT);
+        t.show();
     }
 
 
     public void startGame(View view) {
-        simon.playSequence();
+        simon.playGame();
     }
 
     public static void setRound(int number){

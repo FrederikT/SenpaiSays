@@ -163,13 +163,15 @@ public class SimonCustomView extends View {
 
     private void evaluateClick(int squarenumber){
         blink(squarenumber);
-        if(squarenumber == sequenceList.get(clickingCounter)){
+        if (squarenumber == sequenceList.get(clickingCounter)) {
             // correct square has been pressed
             clickingCounter++;
-            if(clickingCounter == sequenceList.size()){
+            if (clickingCounter == sequenceList.size()) {
                 // sequence has been completed
                 scoreCounter++;
                 MainActivity.setRound(scoreCounter);
+                sequenceCounter = 0;
+                clickingCounter = 0;
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -178,10 +180,9 @@ public class SimonCustomView extends View {
                     }
                 }, 1000);
             }
-        }else{
+        } else {
             //wrong square has been pressed
             gameOver();
-
 
         }
 
@@ -217,8 +218,11 @@ public class SimonCustomView extends View {
         scoreCounter=0;
     }
 
-
-
+    public void playGame(){
+        if(!isPlaying){
+            playSequence();
+        }
+    }
 
     public void playSequence(){
         isPlaying = true;
@@ -272,6 +276,8 @@ public class SimonCustomView extends View {
 
 
     public void blink(int squareNumber){
+        Toast t = Toast.makeText(mContext, clickingCounter+"-"+squareNumber, Toast.LENGTH_SHORT);
+        t.show();
         switch (squareNumber){
             case 1:
                 yellowPaintSquare.setColor(getResources().getColor(R.color.yellowBright));

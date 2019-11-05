@@ -37,6 +37,11 @@ public class ScoreManager {
     }
 
 
+    public String getPlayername(){
+        return db.getLastPlayerName();
+    }
+
+
     /**
      * changes a string, so that strings can contain single '
      * without call of this method string cannot be used within database (sql) context

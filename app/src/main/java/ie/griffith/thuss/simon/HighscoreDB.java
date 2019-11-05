@@ -25,7 +25,7 @@ public class HighscoreDB extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         this.db = sqLiteDatabase;
         try {
-            String sql = "CREATE TABLE score (player_name TEXT Primary KEY, score Number)";
+            String sql = "CREATE TABLE score (player_name TEXT, score Number, Primary key(player_name,score))";
             db.execSQL(sql);
             Log.e("CorkDevelop", "onCreate: table successfully created");
         }catch (Exception e){
@@ -57,7 +57,7 @@ public class HighscoreDB extends SQLiteOpenHelper {
     public List<Highscore> getHighscore(){
         List<Highscore> highscore = new ArrayList<>();
         try{
-            Cursor cursor = db.rawQuery("Select * from score", null);
+            Cursor cursor = db.rawQuery("Select * from score Order by score desc", null);
             cursor.moveToNext();
             while(!cursor.isAfterLast()){
                 highscore.add(new Highscore(cursor.getString(0),Integer.parseInt(cursor.getString(1))));
@@ -71,12 +71,12 @@ public class HighscoreDB extends SQLiteOpenHelper {
             Log.e("CorkDevelop", "on Select: getHighscore() "+e.getMessage());
         }
 
-        return null;
+        return highscore;
     }
     public List<Highscore> getTopTen(){
         List<Highscore> highscore = new ArrayList<>();
         try{
-            Cursor cursor = db.rawQuery("Select * from score Limit 10", null);
+            Cursor cursor = db.rawQuery("Select * from score Order by score desc Limit 10", null);
             cursor.moveToNext();
             while(!cursor.isAfterLast()){
                 highscore.add(new Highscore(cursor.getString(0),Integer.parseInt(cursor.getString(1))));
@@ -90,9 +90,28 @@ public class HighscoreDB extends SQLiteOpenHelper {
             Log.e("CorkDevelop", "on Select: getTopTen() "+e.getMessage());
         }
 
-        return null;
+        return highscore;
     }
 
+    public String getLastPlayerName(){
+        String playerName = "";
+        try{
+            Cursor cursor = db.rawQuery("Select player_name from score Where player_name != 'Player 1'" +
+                    "Order by rowid LIMIT 1", null);
+            cursor.moveToNext();
+            while(!cursor.isAfterLast()){
+                playerName= cursor.getString(0);
+                cursor.moveToNext();
+                Log.e("CorkDevelop", "on Select: getLastPlayerName successfully read from db");
+            }
+            cursor.close();
+            return playerName;
+
+        }catch (Exception e){
+            Log.e("CorkDevelop", "on Select: getTopTen() "+e.getMessage());
+        }
+        return playerName;
+    }
 
 
 }
