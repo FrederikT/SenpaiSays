@@ -1,28 +1,50 @@
 package ie.griffith.thuss.simon.Views;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
+
+import ie.griffith.thuss.simon.MainActivity;
 import ie.griffith.thuss.simon.R;
 import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class SimonCustomView extends View {
 
-    private static final int SQUARE_SIZE = 600;
-    private static final int[] TOP_LEFT = {100,120};
-    private static  final int SPEED = 800;
-    private Context mContext;
 
-    List<Integer> list;
+    private static Context mContext;
+    private final DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
+    private final double width = displayMetrics.widthPixels;
+    // Originally designed using the pixel 3 XL (resolution of 1440 x 2960 pixels and 522 ppi pixel density)
+    // For responsive design the sizes will be calculated depending on the screen size of the pixel 3 XL and the screensize of the device that is used
+    private final int SQUARE_SIZE = (int)(600*(width/1440));
+    private final int[] TOP_LEFT = {(int)(100*(width/1440)),(int)(120*(width/1440))};
+    private static final int DELAY_SPEED = 800;
+    private static final int SPEED = (int)((double)DELAY_SPEED*0.9);
+    private static final int ROUND_DELAY = 1000;
+
+    private List<Integer> sequenceList = new ArrayList<>();
+    private int sequenceCounter = 0;
+    private int clickingCounter = 0;
+    private int scoreCounter = 0;
+    private boolean isPlaying;
+    private boolean isTwoPlayer;
+    private boolean isAppending=false;
+    private Random r = new Random();
+    final Handler handler = new Handler();
     private Rect yellowRectSquare;
     private Rect pinkRectSquare;
     private Rect blueRectSquare;
@@ -32,7 +54,7 @@ public class SimonCustomView extends View {
     private Paint bluePaintSquare;
     private Paint greenPaintSquare;
 
-    final Handler handler = new Handler();
+
 
 
     public SimonCustomView(Context context) {
@@ -73,11 +95,11 @@ public class SimonCustomView extends View {
         pinkPaintSquare.setColor(getResources().getColor(R.color.pink));
         bluePaintSquare.setColor(getResources().getColor(R.color.blue));
         greenPaintSquare.setColor(getResources().getColor(R.color.green));
-
     }
 
     @Override
     protected void onDraw(Canvas canvas){
+
         yellowRectSquare.top = TOP_LEFT[0];
         yellowRectSquare.left = TOP_LEFT[1];
         yellowRectSquare.bottom = yellowRectSquare.top + SQUARE_SIZE;
@@ -99,74 +121,159 @@ public class SimonCustomView extends View {
         greenRectSquare.right = greenRectSquare.left + SQUARE_SIZE;
 
 
-
         canvas.drawRect(yellowRectSquare,yellowPaintSquare);
         canvas.drawRect(pinkRectSquare,pinkPaintSquare);
         canvas.drawRect(blueRectSquare,bluePaintSquare);
         canvas.drawRect(greenRectSquare,greenPaintSquare);
+
 
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         // MotionEvent reports input details from the touch screen
-        // and other input controls. In this case, you are only
-        // interested in events where the touch position changed.
+        // for our use-case only the ACTION_DOWN event is necessary
 
-        float x = e.getX();
-        float y = e.getY();
+        if (e.getAction() == MotionEvent.ACTION_DOWN) {
+            if(isPlaying) {
+                if (sequenceCounter == sequenceList.size()) {
+                    float x = e.getX();
+                    float y = e.getY();
 
-        if( (x > TOP_LEFT[1] && x < TOP_LEFT[1]+SQUARE_SIZE) && (y > TOP_LEFT[0] && y < TOP_LEFT[0]+SQUARE_SIZE)){
-            //within top left square
-            blink(1);
-        }else if( (x > TOP_LEFT[1]+SQUARE_SIZE && x < TOP_LEFT[1]+(SQUARE_SIZE*2)) && (y > TOP_LEFT[0] && y < TOP_LEFT[0]+SQUARE_SIZE)){
-            //within top right square
-            blink(2);
-        }else if( (x > TOP_LEFT[1] && x < TOP_LEFT[1]+SQUARE_SIZE) && (y > TOP_LEFT[0]+SQUARE_SIZE && y < TOP_LEFT[0]+(SQUARE_SIZE*2))){
-            //within bottom left square
-            blink(3);
+                    if ((x > TOP_LEFT[1] && x < TOP_LEFT[1] + SQUARE_SIZE) && (y > TOP_LEFT[0] && y < TOP_LEFT[0] + SQUARE_SIZE)) {
+                        //within top left square
+                        evaluateClick(1);
+                    } else if ((x > TOP_LEFT[1] + SQUARE_SIZE && x < TOP_LEFT[1] + (SQUARE_SIZE * 2)) && (y > TOP_LEFT[0] && y < TOP_LEFT[0] + SQUARE_SIZE)) {
+                        //within top right square
+                        evaluateClick(2);
+                    } else if ((x > TOP_LEFT[1] && x < TOP_LEFT[1] + SQUARE_SIZE) && (y > TOP_LEFT[0] + SQUARE_SIZE && y < TOP_LEFT[0] + (SQUARE_SIZE * 2))) {
+                        //within bottom left square
+                        evaluateClick(3);
 
-        }else if( (x > TOP_LEFT[1]+SQUARE_SIZE && x < TOP_LEFT[1]+(SQUARE_SIZE*2)) && (y > TOP_LEFT[0]+SQUARE_SIZE && y < TOP_LEFT[0]+(SQUARE_SIZE*2))) {
-            //within bottom right square
-            blink(4);
-        }else{
-           list = new ArrayList<Integer>();
-            list.add(1);
-            list.add(2);
-            list.add(3);
-            list.add(4);
-            list.add(2);
-            list.add(4);
-            list.add(1);
-            list.add(1);
-            list.add(2);
-            list.add(3);
-            list.add(4);
-            list.add(2);
-            list.add(4);
-            list.add(1);
-            playSequence(list);
+                    } else if ((x > TOP_LEFT[1] + SQUARE_SIZE && x < TOP_LEFT[1] + (SQUARE_SIZE * 2)) && (y > TOP_LEFT[0] + SQUARE_SIZE && y < TOP_LEFT[0] + (SQUARE_SIZE * 2))) {
+                        //within bottom right square
+                        evaluateClick(4);
+                    } else {
+                        playSequence();
+                    }
+                } else {
+                    Toast t = Toast.makeText(mContext, "Please wait for sequence to finish", Toast.LENGTH_SHORT);
+                    t.show();
+                }
+            }
         }
-
-
 
         return true;
     }
 
+    private void evaluateClick(final int squarenumber){
+        blink(squarenumber);
+        if(isTwoPlayer && isAppending) {
+            sequenceCounter = 0;
+            clickingCounter = 0;
+            isAppending = false;
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    sequenceList.add(squarenumber);
+                    playSequence();
+                }
+            }, ROUND_DELAY);
+        }else{
+            if (squarenumber == sequenceList.get(clickingCounter)) {
+                // correct square has been pressed
+                clickingCounter++;
+                if (clickingCounter == sequenceList.size()) {
+                    // sequence has been completed
+                    scoreCounter++;
+                    MainActivity.setRound(scoreCounter);
+                    //only in single player - next one is appending
+                    if (isTwoPlayer) {
+                        isAppending = true;
+                    } else {
+                        sequenceCounter = 0;
+                        clickingCounter = 0;
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sequenceList.add(r.nextInt(4)+1);
+                                playSequence();
+                            }
+                        }, ROUND_DELAY);
+                    }
+                }
+            } else {
+                //wrong square has been pressed
+                gameOver();
 
-    public void playSequence(List<Integer> sequence){
-        for(int i=0; i < sequence.size(); i++){
-            click(i);
+            }
         }
     }
 
-    public void click(final int clickIndex) {
+    private void gameOver(){
+        isPlaying=false;
+        //GameOver music
+        MediaPlayer p = MediaPlayer.create(mContext, R.raw.gameover);
+        p.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+            }
+        });
+        p.start();
+        sequenceList.clear();
+        /*
+         two player mode has no high score, even though the overall pressed fields is the same,
+         the played rounds are only half as in Single player mode.
+         furthermore it supports cheating (achieving a very good High Score by pressing only one field over and over again
+         */
+
+        if(!isTwoPlayer) {
+            MainActivity.setHighscore(scoreCounter);
+        }
+        //show score & Game over
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("GAME OVER \n Your Score: "+scoreCounter);
+        builder.setPositiveButton("Okay",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+
+                    }
+                });
+
+
+        AlertDialog myDialog = builder.create();
+        myDialog.show();
+        scoreCounter=0;
+    }
+
+    public void playGame(boolean isTwoPlayerMode){
+        if(!isPlaying){
+            isTwoPlayer=isTwoPlayerMode;
+            sequenceList.add(r.nextInt(4)+1);
+            playSequence();
+        }
+    }
+
+    public void playSequence(){
+        isPlaying = true;
+        sequenceCounter = 0;
+        clickingCounter = 0;
+        for(int index=0;  index< sequenceList.size(); index++){
+            play(index);
+
+        }
+    }
+
+
+    private void play(final int playIndex) {
         //Function that clicks one place randomally on the view
         final Runnable r = new Runnable() {
             public void run() {
-                blink(list.get(clickIndex));
+                blink(sequenceList.get(playIndex));
                 int audioRes=0;
-                switch (list.get(clickIndex)){
+                switch (sequenceList.get(playIndex)){
                     case 1:
                         audioRes = R.raw.baka;
                         break;
@@ -180,7 +287,7 @@ public class SimonCustomView extends View {
                         audioRes = R.raw.nani;
                         break;
                     default:
-                        Log.e("Game Error", "list contains other than field number");
+                        Log.e("Game Error", "sequenceList contains other than field number");
 
                 }
                 MediaPlayer p = MediaPlayer.create(mContext, audioRes);
@@ -191,13 +298,17 @@ public class SimonCustomView extends View {
                     }
                 });
                 p.start();
+                sequenceCounter++;
             }
         };
-
-        handler.postDelayed(r, (SPEED) * clickIndex); //click_index is nessesary, so that blink wont be simultanious.
+        //playIndex is nessesary, so that blink wont be simultaneous.
+        //DELAY_SPEED is 10% longer than SPEED (Blinking time) because a field wouldn't blink twice in a row
+        // because it the setting to the brighter color will immediatly be overwritten with the previous call to set it dark again
+        handler.postDelayed(r, (DELAY_SPEED) * playIndex);
     }
 
-
+    //redundant code within cases could be put in extra method e.g. using Paint and Color Arrays - readability would get worse.
+    // Creating new class for this with Pain, two colors and creating a array of these would also be possible, but to much for this assignment
     public void blink(int squareNumber){
         switch (squareNumber){
             case 1:

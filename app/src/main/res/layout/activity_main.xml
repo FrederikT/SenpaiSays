@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.widget.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,11 +7,61 @@
     tools:context=".MainActivity">
 
 
+    <Switch
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/switch_name"
+        />
+
+
     <ie.griffith.thuss.simon.Views.SimonCustomView
+        android:id="@+id/custom"
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="@color/colorPrimaryDark">
+        android:background="@color/colorPrimaryDark"
+        android:layout_below="@+id/switch1"
+        >
 
     </ie.griffith.thuss.simon.Views.SimonCustomView>
+
+
+    <EditText
+        android:id="@+id/playerName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/custom"
+        android:ems="10"
+        android:hint="@string/playerNameHint"
+        android:inputType="textPersonName"
+        android:autofillHints="" />
+
+    <TextView
+        android:id="@+id/roundNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:layout_below="@+id/custom"
+        android:layout_toEndOf="@+id/playerName"
+        android:layout_alignBaseline="@+id/playerName"
+        />
+
+
+    <Button
+        android:id="@+id/start_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/playerName"
+        android:onClick="startGame"
+        android:text="@string/start_btn_text"
+        android:background="@color/colorPrimaryDark"
+        android:padding="25dp"/>
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/start_btn"
+        />
 
 </android.widget.RelativeLayout>
