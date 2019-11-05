@@ -25,7 +25,8 @@ public class SimonCustomView extends View {
     private final DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
     private final double width = displayMetrics.widthPixels;
     // Originally designed using the pixel 3 XL (resolution of 1440 x 2960 pixels and 522 ppi pixel density)
-    // For responsive design the sizes will be calculated depending on the screen size of the pixel 3 XL and the screensize of the device that is used
+    // For responsive design the sizes will be calculated
+    // depending on the screen size of the pixel 3 XL and the Screensize of the device that is used
     private final int SQUARE_SIZE = (int)(600*(width/1440));
     private final int[] TOP_LEFT = {(int)(100*(width/1440)),(int)(120*(width/1440))};
 
@@ -65,6 +66,11 @@ public class SimonCustomView extends View {
         init(attrs);
     }
 
+
+    /**
+     * initializes the Rects and Paints for this View
+     * @param set
+     */
     private void init(@Nullable AttributeSet set){
         yellowRectSquare = new Rect();
         pinkRectSquare = new Rect();
@@ -81,6 +87,10 @@ public class SimonCustomView extends View {
         greenPaintSquare.setColor(getResources().getColor(R.color.green));
     }
 
+    /**
+     * draws the Squares depending on corresponding class variables
+     * @param canvas Canvas
+     */
     @Override
     protected void onDraw(Canvas canvas){
 
@@ -113,6 +123,15 @@ public class SimonCustomView extends View {
 
     }
 
+    /**
+     *  onTouchEvent
+     *  only {@link MotionEvent#ACTION_DOWN} will trigger any action
+     *  if conditions are met, {@link GameMechanics#evaluateClick(int)} will be called
+     *  that method will be called with the number of the square which was clicked
+     *  Which square was clicked will be determined by coordinates
+     * @param e MotionEvent
+     * @return true
+     */
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         // MotionEvent reports input details from the touch screen
@@ -137,8 +156,6 @@ public class SimonCustomView extends View {
                     } else if ((x > TOP_LEFT[1] + SQUARE_SIZE && x < TOP_LEFT[1] + (SQUARE_SIZE * 2)) && (y > TOP_LEFT[0] + SQUARE_SIZE && y < TOP_LEFT[0] + (SQUARE_SIZE * 2))) {
                         //within bottom right square
                         MainActivity.mechanics.evaluateClick(4);
-                    } else {
-                        MainActivity.mechanics.playSequence();
                     }
                 } else {
                     Toast t = Toast.makeText(mContext, "Please wait for sequence to finish", Toast.LENGTH_SHORT);
@@ -156,6 +173,11 @@ public class SimonCustomView extends View {
 
     //redundant code within cases could be put in extra method e.g. using Paint and Color Arrays - readability would get worse.
     // Creating new class for this with Pain, two colors and creating a array of these would also be possible, but to much for this assignment
+
+    /**
+     *  Highlights a field by setting the color to a brighter tone and setting it back after waiting for {@link GameMechanics#SPEED} milliseconds
+     * @param squareNumber number of square that should blink
+     */
     public void blink(int squareNumber){
         switch (squareNumber){
             case 1:
@@ -212,6 +234,10 @@ public class SimonCustomView extends View {
 
     }
 
+    /**
+     * shows dialog stating that the game ended. Awaits Confirmation from user
+     * @param score Achieved score in this game
+     */
     public static void showGameOverDialog(int score) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle("GAME OVER \nYour Score: "+score);

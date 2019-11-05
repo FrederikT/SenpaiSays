@@ -14,7 +14,7 @@ import java.util.List;
 import ie.griffith.thuss.simon.Views.SimonCustomView;
 
 public class MainActivity extends AppCompatActivity {
-    SimonCustomView simon;
+    public static  GameMechanics mechanics;
     private static TextView roundCounter;
     private static List<Highscore> highscore;
     private static ListView list;
@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private static EditText playerName;
     private static ScoreManager manager;
     private static Switch twoPlayer;
-    public static  GameMechanics mechanics;
+    SimonCustomView simon;
 
 
 
@@ -30,28 +30,40 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mContext = getApplicationContext();
-        simon = findViewById(R.id.custom);
-        mechanics = new GameMechanics(simon, getApplicationContext());
-        roundCounter = findViewById(R.id.roundNumber);
         list = findViewById(R.id.list);
         playerName = findViewById(R.id.playerName);
+        roundCounter = findViewById(R.id.roundNumber);
+        simon = findViewById(R.id.custom);
+        twoPlayer=findViewById(R.id.switch1);
+        mContext = getApplicationContext();
+        mechanics = new GameMechanics(simon, getApplicationContext());
         highscore = new ArrayList<>();
         manager = new ScoreManager(getApplicationContext());
-        showHighscore();
         playerName.setText(manager.getPlayername());
-        twoPlayer=findViewById(R.id.switch1);
+        showHighscore();
     }
 
-
+    /**
+     * OnClickMethod for the startGame Button (id:start_btn)
+     * @param view View
+     */
     public void startGame(View view) {
         mechanics.playGame(twoPlayer.isChecked());
     }
 
+    /**
+     *  sets Text of TextView roundCounter (id:roundNumber)
+     * @param number number of current round
+     */
     public static void setRound(int number){
         roundCounter.setText(String.valueOf(number));
     }
 
+    /**
+     * Adds Score to database and displays it by calling {@link #setHighscore(int)}
+     * Player name for Highscore will be read from the EditText playerName -if empty Player 1 will be used
+     * @param score new Highscore
+     */
     public static void setHighscore(int score){
         String name = playerName.getText().toString();
         if(name.trim().equals("")){
@@ -62,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Reads the Top Ten Highscore from the database and sets that list for the ListView (id:list)
+     * uses {@link ScoreManager#getTopTen(Context)}
+     */
     private static void showHighscore() {
         highscore = manager.getTopTen(mContext);
         ArrayAdapter<Highscore> arrayAdapter = new ArrayAdapter<>(
