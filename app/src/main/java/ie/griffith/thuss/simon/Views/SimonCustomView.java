@@ -31,7 +31,8 @@ public class SimonCustomView extends View {
     // For responsive design the sizes will be calculated depending on the screen size of the pixel 3 XL and the screensize of the device that is used
     private final int SQUARE_SIZE = (int)(600*(width/1440));
     private final int[] TOP_LEFT = {(int)(100*(width/1440)),(int)(120*(width/1440))};
-    private static  final int SPEED = 800;
+    private static  final int DELAY_SPEED = 800;
+    private static  final int SPEED = (int)((double)DELAY_SPEED*0.9);
 
     private List<Integer> sequenceList = new ArrayList<Integer>();
     private int sequenceCounter = 0;
@@ -270,8 +271,10 @@ public class SimonCustomView extends View {
                 sequenceCounter++;
             }
         };
-
-        handler.postDelayed(r, (SPEED) * playIndex); //playIndex is nessesary, so that blink wont be simultaneous.
+        //playIndex is nessesary, so that blink wont be simultaneous.
+        //DELAY_SPEED is 10% longer than SPEED (Blinking time) because a field wouldn't blink twice in a row
+        // because it the setting to the brighter color will immediatly be overwritten with the previous call to set it dark again
+        handler.postDelayed(r, (DELAY_SPEED) * playIndex);
     }
 
 
