@@ -1,7 +1,6 @@
 package ie.griffith.thuss.simon;
 
 import android.content.Context;
-import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.List;

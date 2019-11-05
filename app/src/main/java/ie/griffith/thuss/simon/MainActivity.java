@@ -1,28 +1,16 @@
 package ie.griffith.thuss.simon;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Point;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Display;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Switch;
-import android.widget.TabHost;
 import android.widget.TextView;
-import android.widget.TimePicker;
-import android.widget.Toast;
-import android.widget.Toolbar;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import ie.griffith.thuss.simon.Views.SimonCustomView;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private static EditText playerName;
     private static ScoreManager manager;
     private static Switch twoPlayer;
+    public static  GameMechanics mechanics;
 
 
 
@@ -41,11 +30,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mContext = getApplicationContext();
         simon = findViewById(R.id.custom);
+        mechanics = new GameMechanics(simon, getApplicationContext());
         roundCounter = findViewById(R.id.roundNumber);
         list = findViewById(R.id.list);
         playerName = findViewById(R.id.playerName);
-        mContext = getApplicationContext();
         highscore = new ArrayList<>();
         manager = new ScoreManager(getApplicationContext());
         showHighscore();
@@ -55,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void startGame(View view) {
-        simon.playGame(twoPlayer.isChecked());
+        mechanics.playGame(twoPlayer.isChecked());
     }
 
     public static void setRound(int number){
@@ -80,4 +70,5 @@ public class MainActivity extends AppCompatActivity {
                 highscore);
         list.setAdapter(arrayAdapter);
     }
+
 }
