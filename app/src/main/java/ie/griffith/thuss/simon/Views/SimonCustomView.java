@@ -1,27 +1,27 @@
 package ie.griffith.thuss.simon.Views;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 import androidx.annotation.Nullable;
-import ie.griffith.thuss.simon.GameMechanics;
-import ie.griffith.thuss.simon.MainActivity;
 import ie.griffith.thuss.simon.R;
 
 public class SimonCustomView extends View {
 
 
-    private static Context mContext;
-    private final Handler handler = new Handler();
+    public interface SquareTapListener {
+        void onSquareTap(int square);
+    }
+
+    private SquareTapListener squareTapListener;
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private final DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
     private final double width = displayMetrics.widthPixels;
     // Originally designed using the pixel 3 XL (resolution of 1440 x 2960 pixels and 522 ppi pixel density)
@@ -44,25 +44,21 @@ public class SimonCustomView extends View {
 
     public SimonCustomView(Context context) {
         super(context);
-        mContext = context;
         init(null);
     }
 
     public SimonCustomView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
         init(attrs);
     }
 
     public SimonCustomView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mContext = context;
         init(attrs);
     }
 
     public SimonCustomView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        mContext = context;
         init(attrs);
     }
 
@@ -123,62 +119,38 @@ public class SimonCustomView extends View {
 
     }
 
-    /**
-     *  onTouchEvent
-     *  only {@link MotionEvent#ACTION_DOWN} will trigger any action
-     *  if conditions are met, {@link GameMechanics#evaluateClick(int)} will be called
-     *  that method will be called with the number of the square which was clicked
-     *  Which square was clicked will be determined by coordinates
-     * @param e MotionEvent
-     * @return true
-     */
-    @Override
-    public boolean onTouchEvent(MotionEvent e) {
-        // MotionEvent reports input details from the touch screen
-        // for our use-case only the ACTION_DOWN event is necessary
-
-        if (e.getAction() == MotionEvent.ACTION_DOWN) {
-            if(MainActivity.mechanics.isPlaying) {
-                if (MainActivity.mechanics.sequenceCounter == MainActivity.mechanics.sequenceList.size()) {
-                    float x = e.getX();
-                    float y = e.getY();
-
-                    if ((x > TOP_LEFT[1] && x < TOP_LEFT[1] + SQUARE_SIZE) && (y > TOP_LEFT[0] && y < TOP_LEFT[0] + SQUARE_SIZE)) {
-                        //within top left square
-                        MainActivity.mechanics.evaluateClick(1);
-                    } else if ((x > TOP_LEFT[1] + SQUARE_SIZE && x < TOP_LEFT[1] + (SQUARE_SIZE * 2)) && (y > TOP_LEFT[0] && y < TOP_LEFT[0] + SQUARE_SIZE)) {
-                        //within top right square
-                        MainActivity.mechanics.evaluateClick(2);
-                    } else if ((x > TOP_LEFT[1] && x < TOP_LEFT[1] + SQUARE_SIZE) && (y > TOP_LEFT[0] + SQUARE_SIZE && y < TOP_LEFT[0] + (SQUARE_SIZE * 2))) {
-                        //within bottom left square
-                        MainActivity.mechanics.evaluateClick(3);
-
-                    } else if ((x > TOP_LEFT[1] + SQUARE_SIZE && x < TOP_LEFT[1] + (SQUARE_SIZE * 2)) && (y > TOP_LEFT[0] + SQUARE_SIZE && y < TOP_LEFT[0] + (SQUARE_SIZE * 2))) {
-                        //within bottom right square
-                        MainActivity.mechanics.evaluateClick(4);
-                    }
-                } else {
-                    Toast t = Toast.makeText(mContext, "Please wait for sequence to finish", Toast.LENGTH_SHORT);
-                    t.show();
-                }
-            }
-        }
-
-        return true;
+    public void setSquareTapListener(SquareTapListener listener) {
+        squareTapListener = listener;
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() != MotionEvent.ACTION_DOWN || squareTapListener == null) {
+            return true;
+        }
 
-
-
+        float x = event.getX();
+        float y = event.getY();
+        if (yellowRectSquare.contains((int) x, (int) y)) {
+            squareTapListener.onSquareTap(1);
+        } else if (pinkRectSquare.contains((int) x, (int) y)) {
+            squareTapListener.onSquareTap(2);
+        } else if (blueRectSquare.contains((int) x, (int) y)) {
+            squareTapListener.onSquareTap(3);
+        } else if (greenRectSquare.contains((int) x, (int) y)) {
+            squareTapListener.onSquareTap(4);
+        }
+        return true;
+    }
 
     //redundant code within cases could be put in extra method e.g. using Paint and Color Arrays - readability would get worse.
     // Creating new class for this with Pain, two colors and creating a array of these would also be possible, but to much for this assignment
 
     /**
-     *  Highlights a field by setting the color to a brighter tone and setting it back after waiting for {@link GameMechanics#SPEED} milliseconds
+     *  Highlights a field by setting the color to a brighter tone and setting it back after waiting for the highlight duration milliseconds
      * @param squareNumber number of square that should blink
      */
-    public void blink(int squareNumber){
+    public void blink(int squareNumber, int durationMs) {
         switch (squareNumber){
             case 1:
                 yellowPaintSquare.setColor(getResources().getColor(R.color.yellowBright));
@@ -190,7 +162,7 @@ public class SimonCustomView extends View {
                         yellowPaintSquare.setColor(getResources().getColor(R.color.yellow));
                         invalidate();
                     }
-                }, GameMechanics.SPEED);
+                }, durationMs);
                 break;
             case 2:
                 pinkPaintSquare.setColor(getResources().getColor(R.color.pinkBright));
@@ -202,7 +174,7 @@ public class SimonCustomView extends View {
                         pinkPaintSquare.setColor(getResources().getColor(R.color.pink));
                         invalidate();
                     }
-                }, GameMechanics.SPEED);
+                }, durationMs);
                 break;
             case 3:
                 bluePaintSquare.setColor(getResources().getColor(R.color.blueBright));
@@ -214,7 +186,7 @@ public class SimonCustomView extends View {
                         bluePaintSquare.setColor(getResources().getColor(R.color.blue));
                         invalidate();
                     }
-                }, GameMechanics.SPEED);
+                }, durationMs);
                 break;
             case 4:
                 greenPaintSquare.setColor(getResources().getColor(R.color.greenBright));
@@ -226,7 +198,7 @@ public class SimonCustomView extends View {
                         greenPaintSquare.setColor(getResources().getColor(R.color.green));
                         invalidate();
                     }
-                }, GameMechanics.SPEED);
+                }, durationMs);
                 break;
             default:
                 break;
@@ -234,24 +206,13 @@ public class SimonCustomView extends View {
 
     }
 
-    /**
-     * shows dialog stating that the game ended. Awaits Confirmation from user
-     * @param score Achieved score in this game
-     */
-    public static void showGameOverDialog(int score) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setTitle("GAME OVER \nYour Score: "+score);
-        builder.setPositiveButton("Okay",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface arg0, int arg1) {
-
-                    }
-                });
-        AlertDialog myDialog = builder.create();
-        myDialog.show();
+    @Override
+    protected void onDetachedFromWindow() {
+        handler.removeCallbacksAndMessages(null);
+        yellowPaintSquare.setColor(getResources().getColor(R.color.yellow));
+        pinkPaintSquare.setColor(getResources().getColor(R.color.pink));
+        bluePaintSquare.setColor(getResources().getColor(R.color.blue));
+        greenPaintSquare.setColor(getResources().getColor(R.color.green));
+        super.onDetachedFromWindow();
     }
-
 }
-
-
