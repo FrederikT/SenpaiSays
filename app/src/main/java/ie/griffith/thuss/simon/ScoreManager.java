@@ -73,4 +73,8 @@ public class ScoreManager {
     private static String repairString(String s) {
         return s != null ? s.replaceAll("\'", "\'\'") : null;
     }
+
+    void close() {
+        db.close();
+    }
 }

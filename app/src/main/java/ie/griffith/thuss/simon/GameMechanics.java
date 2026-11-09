@@ -4,22 +4,31 @@ package ie.griffith.thuss.simon;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ie.griffith.thuss.simon.Views.SimonCustomView;
 
-public class GameMechanics {
+final class GameMechanics implements SimonCustomView.SquareTapListener {
+    interface Callbacks {
+        void onRoundChanged(int round);
+        void onGameOver(int score, boolean saveScore);
+        void onPlaybackBusy();
+    }
+
     private static final int DELAY_SPEED = 800;
-    public static final int SPEED = (int)((double)DELAY_SPEED*0.9);
+    private static final int HIGHLIGHT_DURATION_MS = DELAY_SPEED * 9 / 10;
     private static final int ROUND_DELAY = 1000;
-    private static Context mContext;
-    private final Handler handler = new Handler();
-    public int sequenceCounter = 0;
-    public List<Integer> sequenceList = new ArrayList<>();
-    public boolean isPlaying;
-    private SimonCustomView simonCustomView;
+    private final Context context;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Callbacks callbacks;
+    private final List<MediaPlayer> playingSounds = new ArrayList<>();
+    private int sequenceCounter;
+    private final List<Integer> sequenceList = new ArrayList<>();
+    private boolean isPlaying;
+    private final SimonCustomView simonCustomView;
     private Random r = new Random();
     private boolean isTwoPlayer;
     private boolean isAppending=false;
@@ -29,11 +38,12 @@ public class GameMechanics {
     /**
      *  Constructor for GameMechanics
      * @param simon reference of SimonCustomView used in Layout
-     * @param context Context
+     * @param callbacks callbacks for the current game screen
      */
-    GameMechanics(SimonCustomView simon, Context context) {
+    GameMechanics(SimonCustomView simon, Callbacks callbacks) {
         simonCustomView = simon;
-        mContext = context;
+        context = simon.getContext().getApplicationContext();
+        this.callbacks = callbacks;
     }
 
     /**
@@ -52,7 +62,7 @@ public class GameMechanics {
      * Plays Sequence.
      * for each item of {@link #sequenceList} the {@link #play(int)} method will be called
      */
-    public void playSequence(){
+    private void playSequence() {
         isPlaying = true;
         sequenceCounter = 0;
         clickingCounter = 0;
@@ -74,7 +84,7 @@ public class GameMechanics {
         //Function that clicks one place randomly on the view
         final Runnable r = new Runnable() {
             public void run() {
-                simonCustomView.blink(sequenceList.get(playIndex));
+                simonCustomView.blink(sequenceList.get(playIndex), HIGHLIGHT_DURATION_MS);
                 int audioRes=0;
                 switch (sequenceList.get(playIndex)){
                     case 1:
@@ -93,14 +103,7 @@ public class GameMechanics {
                         Log.e("Game Error", "sequenceList contains other than field number");
 
                 }
-                MediaPlayer p = MediaPlayer.create(mContext, audioRes);
-                p.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mp) {
-                        mp.release();
-                    }
-                });
-                p.start();
+                playSound(audioRes);
                 sequenceCounter++;
             }
         };
@@ -118,8 +121,16 @@ public class GameMechanics {
      *                    reset counter variables, add new item to sequence and call {@link #playSequence()}
      * @param squarenumber Squarenumber
      */
-    public void evaluateClick(final int squarenumber){
-        simonCustomView.blink(squarenumber);
+    @Override
+    public void onSquareTap(final int squarenumber) {
+        if (!isPlaying) {
+            return;
+        }
+        if (sequenceCounter != sequenceList.size()) {
+            callbacks.onPlaybackBusy();
+            return;
+        }
+        simonCustomView.blink(squarenumber, HIGHLIGHT_DURATION_MS);
         if(isTwoPlayer && isAppending) {
             sequenceCounter = 0;
             clickingCounter = 0;
@@ -138,7 +149,7 @@ public class GameMechanics {
                 if (clickingCounter == sequenceList.size()) {
                     // sequence has been completed
                     scoreCounter++;
-                    MainActivity.setRound(scoreCounter);
+                    callbacks.onRoundChanged(scoreCounter);
                     //only in single player - next one is appending
                     if (isTwoPlayer) {
                         isAppending = true;
@@ -164,19 +175,11 @@ public class GameMechanics {
 
     /**
      *  Game Over method
-     *  Plays GameOver Sound, resets variables, calls {@link MainActivity#setHighscore(int)} and {@link SimonCustomView#showGameOverDialog(int)}
+     * Plays the game-over sound and reports the final score.
      */
     private void gameOver(){
         isPlaying=false;
-        //GameOver music
-        MediaPlayer p = MediaPlayer.create(mContext, R.raw.gameover);
-        p.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                mp.release();
-            }
-        });
-        p.start();
+        playSound(R.raw.gameover);
         sequenceList.clear();
         /*
          two player mode has no high score, even though the overall pressed fields is the same,
@@ -184,15 +187,36 @@ public class GameMechanics {
          furthermore it supports cheating (achieving a very good High Score by pressing only one field over and over again
          */
 
-        if(!isTwoPlayer) {
-            MainActivity.setHighscore(scoreCounter);
-        }
-        //show score & Game over
-
-        SimonCustomView.showGameOverDialog(scoreCounter);
+        callbacks.onGameOver(scoreCounter, !isTwoPlayer);
 
         scoreCounter=0;
     }
 
 
+
+    private void playSound(int audioResource) {
+        MediaPlayer player = MediaPlayer.create(context, audioResource);
+        if (player == null) {
+            return;
+        }
+        playingSounds.add(player);
+        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer finished) {
+                if (playingSounds.remove(finished)) {
+                    finished.release();
+                }
+            }
+        });
+        player.start();
+    }
+
+    void close() {
+        handler.removeCallbacksAndMessages(null);
+        simonCustomView.setSquareTapListener(null);
+        for (MediaPlayer player : playingSounds) {
+            player.release();
+        }
+        playingSounds.clear();
+    }
 }
